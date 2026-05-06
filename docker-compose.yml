@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: banking-chatbot-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: chatbotdb
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - chatbot-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  chatbot-network:
+    driver: bridge
+

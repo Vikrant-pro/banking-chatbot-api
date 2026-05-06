@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: banking-chatbot-api
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/chatbotdb
+  mvc:
+    cors:
+      allowed-origins: "*"
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+      allowed-headers: "*"
+
+server:
+  port: 8081
+  servlet:
+    context-path: /
+
+anthropic:
+  api:
+    key: ${ANTHROPIC_API_KEY:your-key-here}
+  model: claude-sonnet-4-20250514
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.vikrant.chatbot: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
