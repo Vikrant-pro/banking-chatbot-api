@@ -23,18 +23,94 @@ public class ChatService {
     private final LLMService llmService;
     private final ConversationRepository conversationRepository;
     private final MongoTemplate mongoTemplate;
+    private final SessionManager sessionManager;
+    private final ResponseCache responseCache;
 
-    public ChatService(LLMService llmService, ConversationRepository conversationRepository, MongoTemplate mongoTemplate) {
+    private static final String SENSITIVE_RESPONSE = "For security reasons, never share OTP, PIN or card details with anyone including bank staff. If someone asked you for this, please call 1800-XXX-XXXX immediately.";
+
+    public ChatService(LLMService llmService, ConversationRepository conversationRepository,
+                      MongoTemplate mongoTemplate, SessionManager sessionManager, ResponseCache responseCache) {
         this.llmService = llmService;
         this.conversationRepository = conversationRepository;
         this.mongoTemplate = mongoTemplate;
+        this.sessionManager = sessionManager;
+        this.responseCache = responseCache;
     }
 
     public ChatResponse processQuestion(ChatRequest chatRequest) throws IOException {
         long startTime = System.currentTimeMillis();
 
-        // Fetch last 5 conversation turns for context
-        List<ConversationLog> conversationHistory = getConversationHistory(chatRequest.getUserId(), 5);
+        // Handle session management
+        String sessionId = sessionManager.getOrCreateSessionId(chatRequest.getSessionId(), chatRequest.getUserId());
+        chatRequest.setSessionId(sessionId);
+
+        // Check for sensitive content in the question
+        if (isSensitiveQuestion(chatRequest.getQuestion())) {
+            long responseTimeMs = System.currentTimeMillis() - startTime;
+
+            // Save flagged conversation log
+            ConversationLog log = new ConversationLog();
+            log.setId(UUID.randomUUID().toString());
+            log.setUserId(chatRequest.getUserId());
+            log.setSessionId(sessionId);
+            log.setQuestion(chatRequest.getQuestion());
+            log.setAnswer(SENSITIVE_RESPONSE);
+            log.setTimestamp(LocalDateTime.now());
+            log.setResponseTimeMs(responseTimeMs);
+            log.setLanguage(detectLanguage(chatRequest.getQuestion()));
+            log.setFlaggedAsSensitive(true);
+
+            conversationRepository.save(log);
+
+            // Return security response
+            ChatResponse response = new ChatResponse();
+            response.setResponseId(UUID.randomUUID().toString());
+            response.setSessionId(sessionId);
+            response.setAnswer(SENSITIVE_RESPONSE);
+            response.setResponseTimeMs(responseTimeMs);
+            response.setTimestamp(LocalDateTime.now());
+            response.setFromCache(false);
+
+            return response;
+        }
+
+        // Check cache first
+        ResponseCache.CachedResponse cachedResponse = responseCache.get(chatRequest.getQuestion());
+        if (cachedResponse != null) {
+            long responseTimeMs = System.currentTimeMillis() - startTime;
+
+            // Save conversation log for cached response
+            ConversationLog log = new ConversationLog();
+            log.setId(UUID.randomUUID().toString());
+            log.setUserId(chatRequest.getUserId());
+            log.setSessionId(sessionId);
+            log.setQuestion(chatRequest.getQuestion());
+            log.setAnswer(cachedResponse.getAnswer());
+            log.setTimestamp(LocalDateTime.now());
+            log.setResponseTimeMs(responseTimeMs);
+            log.setLanguage(detectLanguage(chatRequest.getQuestion()));
+            log.setFlaggedAsSensitive(false);
+
+            conversationRepository.save(log);
+
+            // Return cached response
+            ChatResponse response = new ChatResponse();
+            response.setResponseId(UUID.randomUUID().toString());
+            response.setSessionId(sessionId);
+            response.setAnswer(cachedResponse.getAnswer());
+            response.setResponseTimeMs(responseTimeMs);
+            response.setTimestamp(LocalDateTime.now());
+            response.setFromCache(true);
+
+            return response;
+        }
+
+        // Fetch conversation history for context (only if session is valid)
+        List<ConversationLog> conversationHistory = List.of();
+        if (sessionManager.isSessionValid(sessionId)) {
+            conversationHistory = getConversationHistory(chatRequest.getUserId(), sessionId, 5);
+        }
+
         List<String> historyMessages = conversationHistory.stream()
                 .map(log -> "Q: " + log.getQuestion() + " A: " + log.getAnswer())
                 .collect(Collectors.toList());
@@ -42,6 +118,9 @@ public class ChatService {
         // Call Claude API
         String answer = llmService.callClaudeAPI(chatRequest.getQuestion(), historyMessages);
         long responseTimeMs = System.currentTimeMillis() - startTime;
+
+        // Cache the response
+        responseCache.put(chatRequest.getQuestion(), answer, responseTimeMs);
 
         // Detect language
         String language = detectLanguage(chatRequest.getQuestion());
@@ -53,7 +132,7 @@ public class ChatService {
         ConversationLog log = new ConversationLog();
         log.setId(UUID.randomUUID().toString());
         log.setUserId(chatRequest.getUserId());
-        log.setSessionId(chatRequest.getSessionId());
+        log.setSessionId(sessionId);
         log.setQuestion(chatRequest.getQuestion());
         log.setAnswer(answer);
         log.setTimestamp(LocalDateTime.now());
@@ -63,13 +142,17 @@ public class ChatService {
 
         conversationRepository.save(log);
 
+        // Update session activity
+        sessionManager.updateSessionActivity(sessionId);
+
         // Prepare response
         ChatResponse response = new ChatResponse();
         response.setResponseId(UUID.randomUUID().toString());
-        response.setSessionId(chatRequest.getSessionId());
+        response.setSessionId(sessionId);
         response.setAnswer(answer);
         response.setResponseTimeMs(responseTimeMs);
         response.setTimestamp(LocalDateTime.now());
+        response.setFromCache(false);
 
         return response;
     }
@@ -105,8 +188,8 @@ public class ChatService {
         return results.getMappedResults();
     }
 
-    private List<ConversationLog> getConversationHistory(String userId, int limit) {
-        return conversationRepository.findByUserIdOrderByTimestampDesc(userId)
+    private List<ConversationLog> getConversationHistory(String userId, String sessionId, int limit) {
+        return conversationRepository.findByUserIdAndSessionIdOrderByTimestampDesc(userId, sessionId)
                 .stream()
                 .limit(limit)
                 .collect(Collectors.toList());
@@ -134,5 +217,9 @@ public class ChatService {
                lowerContent.contains("sensitive") ||
                content.matches(".*\\d{16}.*"); // 16-digit card number pattern
     }
-}
 
+    private boolean isSensitiveQuestion(String question) {
+        String lowerQuestion = question.toLowerCase();
+        return lowerQuestion.contains("otp") || lowerQuestion.contains("pin") || lowerQuestion.contains("password");
+    }
+}

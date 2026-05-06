@@ -17,5 +17,7 @@ public class ChatResponse {
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime timestamp;
+    
+    private boolean fromCache;
+    private String disclaimer = "This is an AI assistant. For critical banking decisions, please contact your branch.";
 }
-

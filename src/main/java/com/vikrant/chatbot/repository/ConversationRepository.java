@@ -12,5 +12,6 @@ public interface ConversationRepository extends MongoRepository<ConversationLog,
     List<ConversationLog> findByUserId(String userId);
     
     List<ConversationLog> findByUserIdOrderByTimestampDesc(String userId);
+    
+    List<ConversationLog> findByUserIdAndSessionIdOrderByTimestampDesc(String userId, String sessionId);
 }
-

@@ -1,0 +1,928 @@
+{
+  "info": {
+    "name": "Banking Chatbot API - Complete Test Suite",
+    "description": "Comprehensive Postman collection for testing the Banking Chatbot REST API with security, audit, and caching features.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "1. Basic Chat Question - Home Loan Interest Rate",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"user123\",\n  \"sessionId\": \"sess001\",\n  \"question\": \"What is the current home loan interest rate?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has required fields\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('responseId');",
+              "    pm.expect(jsonData).to.have.property('sessionId');",
+              "    pm.expect(jsonData).to.have.property('answer');",
+              "    pm.expect(jsonData).to.have.property('responseTimeMs');",
+              "    pm.expect(jsonData).to.have.property('timestamp');",
+              "    pm.expect(jsonData).to.have.property('fromCache');",
+              "    pm.expect(jsonData).to.have.property('disclaimer');",
+              "});",
+              "",
+              "pm.test(\"Session ID is returned\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.sessionId).to.be.a('string').and.not.be.empty;",
+              "});",
+              "",
+              "pm.test(\"Response time is reasonable\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.responseTimeMs).to.be.above(0).and.below(10000);",
+              "});",
+              "",
+              "pm.test(\"Disclaimer is present\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.disclaimer).to.include('AI assistant');",
+              "});",
+              "",
+              "pm.test(\"Answer contains banking content\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.answer).to.be.a('string').and.not.be.empty;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. EMI Calculation Test",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"user123\",\n  \"sessionId\": \"sess001\",\n  \"question\": \"Calculate EMI for 50 lakh home loan for 20 years at 8.5% interest\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has required fields\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('responseId');",
+              "    pm.expect(jsonData).to.have.property('sessionId');",
+              "    pm.expect(jsonData).to.have.property('answer');",
+              "    pm.expect(jsonData).to.have.property('responseTimeMs');",
+              "    pm.expect(jsonData).to.have.property('timestamp');",
+              "    pm.expect(jsonData).to.have.property('fromCache');",
+              "    pm.expect(jsonData).to.have.property('disclaimer');",
+              "});",
+              "",
+              "pm.test(\"EMI calculation response\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.answer).to.be.a('string');",
+              "    // EMI calculation should contain numbers or formula",
+              "    pm.expect(jsonData.answer.length).to.be.greaterThan(10);",
+              "});",
+              "",
+              "pm.test(\"Same session ID maintained\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.sessionId).to.equal('sess001');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Sensitive Question Test - OTP Security",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"user123\",\n  \"sessionId\": \"sess001\",\n  \"question\": \"Someone asked for my OTP, what should I do?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Security response for sensitive question\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.answer).to.include('never share OTP');",
+              "    pm.expect(jsonData.answer).to.include('1800-XXX-XXXX');",
+              "});",
+              "",
+              "pm.test(\"Response is not from cache\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.fromCache).to.be.false;",
+              "});",
+              "",
+              "pm.test(\"Fast response time for security questions\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.responseTimeMs).to.be.below(100);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Hindi Language Test - Account Opening",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"user456\",\n  \"sessionId\": \"sess002\",\n  \"question\": \"मुझे अपना बैंक खाता कैसे खोलना है?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has required fields\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('responseId');",
+              "    pm.expect(jsonData).to.have.property('sessionId');",
+              "    pm.expect(jsonData).to.have.property('answer');",
+              "    pm.expect(jsonData).to.have.property('responseTimeMs');",
+              "    pm.expect(jsonData).to.have.property('timestamp');",
+              "    pm.expect(jsonData).to.have.property('fromCache');",
+              "    pm.expect(jsonData).to.have.property('disclaimer');",
+              "});",
+              "",
+              "pm.test(\"New session created for new user\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.sessionId).to.equal('sess002');",
+              "});",
+              "",
+              "pm.test(\"Response contains helpful banking information\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.answer).to.be.a('string').and.not.be.empty;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Get Conversation History",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8081/api/chat/history/user123",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "history",
+            "user123"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response is an array\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});",
+              "",
+              "pm.test(\"History items have required fields\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    if (jsonData.length > 0) {",
+              "        const firstItem = jsonData[0];",
+              "        pm.expect(firstItem).to.have.property('id');",
+              "        pm.expect(firstItem).to.have.property('userId');",
+              "        pm.expect(firstItem).to.have.property('sessionId');",
+              "        pm.expect(firstItem).to.have.property('question');",
+              "        pm.expect(firstItem).to.have.property('answer');",
+              "        pm.expect(firstItem).to.have.property('timestamp');",
+              "        pm.expect(firstItem).to.have.property('responseTimeMs');",
+              "        pm.expect(firstItem).to.have.property('language');",
+              "        pm.expect(firstItem).to.have.property('flaggedAsSensitive');",
+              "    }",
+              "});",
+              "",
+              "pm.test(\"History is ordered by timestamp (newest first)\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    if (jsonData.length > 1) {",
+              "        for (let i = 0; i < jsonData.length - 1; i++) {",
+              "            const currentTime = new Date(jsonData[i].timestamp).getTime();",
+              "            const nextTime = new Date(jsonData[i + 1].timestamp).getTime();",
+              "            pm.expect(currentTime).to.be.at.least(nextTime);",
+              "        }",
+              "    }",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Get Popular Questions",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8081/api/chat/popular-questions",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "popular-questions"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response is an array\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});",
+              "",
+              "pm.test(\"Popular questions have question and count\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    if (jsonData.length > 0) {",
+              "        jsonData.forEach(function(item) {",
+              "            pm.expect(item).to.have.property('question');",
+              "            pm.expect(item).to.have.property('count');",
+              "            pm.expect(item.count).to.be.a('number').and.be.above(0);",
+              "        });",
+              "    }",
+              "});",
+              "",
+              "pm.test(\"Questions are ordered by count (highest first)\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    if (jsonData.length > 1) {",
+              "        for (let i = 0; i < jsonData.length - 1; i++) {",
+              "            pm.expect(jsonData[i].count).to.be.at.least(jsonData[i + 1].count);",
+              "        }",
+              "    }",
+              "});",
+              "",
+              "pm.test(\"Maximum 5 popular questions returned\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.length).to.be.at.most(5);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Rate Limit Test - Request 1",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"ratelimit_user\",\n  \"sessionId\": \"ratelimit_sess\",\n  \"question\": \"What is savings account rate?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"First request succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response structure is valid\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('responseId');",
+              "    pm.expect(jsonData).to.have.property('sessionId');",
+              "    pm.expect(jsonData).to.have.property('answer');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Rate Limit Test - Request 2",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"ratelimit_user\",\n  \"sessionId\": \"ratelimit_sess\",\n  \"question\": \"What is savings account rate?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Second request succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Rate Limit Test - Request 3",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"ratelimit_user\",\n  \"sessionId\": \"ratelimit_sess\",\n  \"question\": \"What is savings account rate?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Third request succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Rate Limit Test - Request 4",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"ratelimit_user\",\n  \"sessionId\": \"ratelimit_sess\",\n  \"question\": \"What is savings account rate?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Fourth request succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Rate Limit Test - Request 5",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"ratelimit_user\",\n  \"sessionId\": \"ratelimit_sess\",\n  \"question\": \"What is savings account rate?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Fifth request succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Rate Limit Test - Request 6",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"ratelimit_user\",\n  \"sessionId\": \"ratelimit_sess\",\n  \"question\": \"What is savings account rate?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Sixth request succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Rate Limit Test - Request 7",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"ratelimit_user\",\n  \"sessionId\": \"ratelimit_sess\",\n  \"question\": \"What is savings account rate?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Seventh request succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Rate Limit Test - Request 8",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"ratelimit_user\",\n  \"sessionId\": \"ratelimit_sess\",\n  \"question\": \"What is savings account rate?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Eighth request succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Rate Limit Test - Request 9",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"ratelimit_user\",\n  \"sessionId\": \"ratelimit_sess\",\n  \"question\": \"What is savings account rate?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ninth request succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Rate Limit Test - Request 10",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"ratelimit_user\",\n  \"sessionId\": \"ratelimit_sess\",\n  \"question\": \"What is savings account rate?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Tenth request succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Rate Limit Test - Request 11 (Should Fail)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"ratelimit_user\",\n  \"sessionId\": \"ratelimit_sess\",\n  \"question\": \"What is savings account rate?\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/chat/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Eleventh request is rate limited\", function () {",
+              "    pm.response.to.have.status(429);",
+              "});",
+              "",
+              "pm.test(\"Rate limit error message\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.error).to.include('Rate limit exceeded');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8081/actuator/health",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "actuator",
+            "health"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Health status is UP\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.equal('UP');",
+              "});",
+              "",
+              "pm.test(\"MongoDB component is UP\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.components).to.have.property('mongoDb');",
+              "    pm.expect(jsonData.components.mongoDb.status).to.equal('UP');",
+              "});",
+              "",
+              "pm.test(\"Disk space component is UP\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.components).to.have.property('diskSpace');",
+              "    pm.expect(jsonData.components.diskSpace.status).to.equal('UP');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    }
+  ]
+}

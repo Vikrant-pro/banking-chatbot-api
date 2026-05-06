@@ -37,10 +37,7 @@ public class ChatController {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "userId is required"));
             }
-            if (chatRequest.getSessionId() == null || chatRequest.getSessionId().trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "sessionId is required"));
-            }
+            // sessionId is now optional - will be auto-generated if not provided
             if (chatRequest.getQuestion() == null || chatRequest.getQuestion().trim().isEmpty()) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "question is required"));
@@ -121,4 +118,3 @@ public class ChatController {
         }
     }
 }
-
