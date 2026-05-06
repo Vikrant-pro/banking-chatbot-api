@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.vikrant.chatbot.middleware.RateLimiterFilter;
 import com.vikrant.chatbot.middleware.AuditLogFilter;
+import com.vikrant.chatbot.repository.AuditLogRepository;
 
 @Configuration
 public class AppConfig {
@@ -19,9 +20,9 @@ public class AppConfig {
     }
 
     @Bean
-    public FilterRegistrationBean<AuditLogFilter> auditLogFilter(AuditLogFilter auditLogFilter) {
+    public FilterRegistrationBean<AuditLogFilter> auditLogFilter(AuditLogRepository auditLogRepository) {
         FilterRegistrationBean<AuditLogFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(auditLogFilter);
+        registrationBean.setFilter(new AuditLogFilter(auditLogRepository));
         registrationBean.addUrlPatterns("/api/chat/*");
         registrationBean.setOrder(2);
         return registrationBean;

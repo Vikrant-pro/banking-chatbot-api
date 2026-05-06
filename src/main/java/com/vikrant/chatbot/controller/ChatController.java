@@ -25,10 +25,6 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    /**
-     * POST /api/chat/ask
-     * Ask a banking question and get AI-powered response
-     */
     @PostMapping("/ask")
     public ResponseEntity<?> askQuestion(@RequestBody ChatRequest chatRequest) {
         try {
